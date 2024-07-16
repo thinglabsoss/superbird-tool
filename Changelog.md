@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.3
+* `--burn_mode`
+  * Fixed --burn_mode bug causing false positive error message
+  * Added message when using --burn_mode while in Burn Mode
+* Housekeeping
+  * Added 0.1.0 to Changelog
+  * Updated CLI attribution message, added Car-Thing-Hax-Community name/repo link and specified using fork from bishopdynamics in cli output
+
+## 0.1.0 [f371ff7](https://github.com/bishopdynamics/superbird-tool/tree/f371ff715ee4b0ba4f689d9785a7513731242d38)
+* Latest @bishopdynamics release, no official changelog available
+
 ## 0.0.8
 * fix rare divide-by-zero case when reading or writing partitions
 * tweaked how experimental `make-binary.sh` works
