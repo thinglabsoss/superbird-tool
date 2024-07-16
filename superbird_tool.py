@@ -53,6 +53,15 @@ def test_if_empty(part):
         DECODED_CHUNK = '42' # just needs to not be empty
         return DECODED_CHUNK
 
+def rename_parts(folderpath):
+    old_to_new_mapping = {'system_a.dump':"system_a.ext2",'system_b.dump':'system_b.ext2','settings.dump':'settings.ext4','data.dump':'data.ext4'}
+    for i in old_to_new_mapping:
+        try:
+            os.rename(f'{folderpath}/{i}', f'{folderpath}/{old_to_new_mapping[i]}')
+            print("Renamed " + old_to_new_mapping[i])
+        except:
+            continue
+
 if __name__ == '__main__':
     print(f'Spotify Car Thing (superbird) toolkit, v{VERSION}, by bishopdynamics')
     print('     https://github.com/bishopdynamics/superbird-tool')
@@ -251,9 +260,11 @@ if __name__ == '__main__':
             print('device dump complete')
     elif args.restore_device:
         dev = enter_burn_mode(dev)
+        reset_recommend = False
         if dev is not None:
             # NOTE: here we do NOT touch bootloader partition
             FOLDER_NAME = args.restore_device[0]
+            rename_parts(FOLDER_NAME)
             print(f'restoring entire device from dumpfiles in {FOLDER_NAME}')
             FILE_LIST = [
                 'fip_a.dump', 'fip_b.dump', 'logo.dump', 'dtbo_a.dump', 'dtbo_b.dump', 'vbmeta_a.dump',
@@ -291,29 +302,46 @@ if __name__ == '__main__':
             # handle data and settings partitions last
             if not os.path.exists(f'{FOLDER_NAME}/data.ext4'):
                 print(f'did not find {FOLDER_NAME}/data.ext4, erasing data partition instead')
-                dev.bulkcmd('amlmmc erase data')
+                try:
+                    dev.bulkcmd('amlmmc erase data')
+                except:
+                    print("\nErasing data failed. A factory reset is recommended\n")
+                    reset_recommend = True
             else:
                 DECODED_CHUNK = test_if_empty('data.ext4')
                 if DECODED_CHUNK == '':
                     print(f'The first 1MB of {FOLDER_NAME}/data.ext4 are null, erasing data partition instead')
-                    dev.bulkcmd('amlmmc erase data')
+                    try:
+                        dev.bulkcmd('amlmmc erase data')
+                    except:
+                        print("\nErasing data failed. A factory reset is recommended\n")
+                        reset_recommend = True
                 else:
                     dev.restore_partition('data', f'{FOLDER_NAME}/data.ext4')
 
             if not os.path.exists(f'{FOLDER_NAME}/settings.ext4'):
                 print(f'did not find {FOLDER_NAME}/settings.ext4, erasing settings partition instead')
-                dev.bulkcmd('amlmmc erase settings')
+                try:
+                    dev.bulkcmd('amlmmc erase settings')
+                except:
+                    print("\nErasing settings failed. A factory reset is recommended\n")
+                    reset_recommend = True
             else:
                 DECODED_CHUNK = test_if_empty('settings.ext4')
                 if DECODED_CHUNK == '':
                     print(f'The first 1MB of {FOLDER_NAME}/settings.ext4 are null, erasing settings partition instead')
-                    dev.bulkcmd('amlmmc erase settings')
+                    try:
+                        dev.bulkcmd('amlmmc erase settings')
+                    except:
+                        print("\nErasing settings failed. A factory reset is recommended\n")
+                        reset_recommend = True
                 else:
                     dev.restore_partition('settings', f'{FOLDER_NAME}/settings.ext4')
             # always do bootloader last
             dev.restore_partition('bootloader', f'{FOLDER_NAME}/bootloader.dump')
-            dev.bulkcmd('reset')
-            print('device restore complete')
+            print('Device restore complete. Replug your Car Thing to start using it.')
+            if reset_recommend:
+                print("\n\nFactory reseting your Car Thing is recommended. You can do this by unplugging your device then replugging it while holding the preset 2 and back buttons. You can let go of the buttons when the Spotify logo appears.")
     elif args.disable_charger_check:
         dev = enter_burn_mode(dev)
         if dev is not None:
