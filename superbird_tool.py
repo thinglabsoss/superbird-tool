@@ -19,7 +19,7 @@ from uboot_env import read_environ
 from superbird_device import SuperbirdDevice
 from superbird_device import find_device, check_device_mode, enter_burn_mode
 
-VERSION = '0.1.0'
+VERSION = '0.1.3'
 
 # this method chosen specifically because it works correctly when bundled using nuitka --onefile
 IMAGES_PATH = Path(os.path.dirname(__file__)).joinpath('images')
@@ -63,8 +63,9 @@ def rename_parts(folderpath):
             continue
 
 if __name__ == '__main__':
-    print(f'Spotify Car Thing (superbird) toolkit, v{VERSION}, by bishopdynamics')
-    print('     https://github.com/bishopdynamics/superbird-tool')
+    print(f'Spotify Car Thing (superbird) toolkit, v{VERSION}, by Car-Thing-Hax-Community')
+    print('     https://github.com/Car-Thing-Hax-Community/superbird-tool   ')
+    print('     Forked from https://github.com/bishopdynamics/superbird-tool')
     print('')
     argument_parser = argparse.ArgumentParser(
         description='Options cannot be combined; do one thing at a time :)'
@@ -361,7 +362,9 @@ if __name__ == '__main__':
             dev.bulkcmd('env save')
             print('The device will now check for valid charger, requiring you to press menu button to bypass')
     elif args.burn_mode:
-        if check_device_mode('usb'):
+        if check_device_mode('usb-burn', silent=True):
+            print("Device already in USB Burn Mode")
+        elif check_device_mode('usb'):
             print('Entering USB Burn Mode')
             dev.bl2_boot(str(IMAGES_PATH.joinpath('superbird.bl2.encrypted.bin')), str(IMAGES_PATH.joinpath('superbird.bootloader.img')))
             print('Waiting for device...')

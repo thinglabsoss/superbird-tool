@@ -74,7 +74,9 @@ def find_device(silent:bool=False):
         found_devices = usb.core.find(idVendor=0x1b8e, idProduct=0xc003)
         if found_devices is not None:
             dev_product = found_devices[0].device.product
-            if dev_product is None:
+            # I don't understand it, just documenting it and fixing the bug.
+            # --burn_mode somehow has dev_product set to M8-CHIP, --find_device has dev_product be None
+            if dev_product is None or dev_product == "M8-CHIP": 
                 if not silent:
                     print('Found device booted in USB Burn Mode (ready for commands)')
                 return 'usb-burn'
