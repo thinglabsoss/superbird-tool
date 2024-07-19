@@ -19,7 +19,7 @@ from uboot_env import read_environ
 from superbird_device import SuperbirdDevice
 from superbird_device import find_device, check_device_mode, enter_burn_mode
 
-VERSION = '0.1.3'
+VERSION = '0.1.4'
 
 # this method chosen specifically because it works correctly when bundled using nuitka --onefile
 IMAGES_PATH = Path(os.path.dirname(__file__)).joinpath('images')

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4
+* Introduced DHCP server and client over RNDIS - Refer to [scripts/usb-gadget/README.md](scripts/usb-gadget/README.md)
+  * Rewrote S49usbgadget
+  * Added supporting files
+  * setup_host_usbnet.sh is now deprecated
+
 ## 0.1.3
 * `--burn_mode`
   * Fixed --burn_mode bug causing false positive error message
@@ -7,6 +13,9 @@
 * Housekeeping
   * Added 0.1.0 to Changelog
   * Updated CLI attribution message, added Car-Thing-Hax-Community name/repo link and specified using fork from bishopdynamics in cli output
+
+## 0.1.1 & 0.1.2
+* Made some changes to the flashing logic to account for missing/misnamed files
 
 ## 0.1.0 [f371ff7](https://github.com/bishopdynamics/superbird-tool/tree/f371ff715ee4b0ba4f689d9785a7513731242d38)
 * Latest @bishopdynamics release, no official changelog available
