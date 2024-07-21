@@ -19,7 +19,7 @@ from uboot_env import read_environ
 from superbird_device import SuperbirdDevice
 from superbird_device import find_device, check_device_mode, enter_burn_mode
 
-VERSION = '0.1.4'
+VERSION = '0.1.5'
 
 # this method chosen specifically because it works correctly when bundled using nuitka --onefile
 IMAGES_PATH = Path(os.path.dirname(__file__)).joinpath('images')
@@ -84,6 +84,7 @@ if __name__ == '__main__':
     argument_parser.add_argument('--enable_charger_check', action='store_true', help='enable check for valid charger at boot')
     argument_parser.add_argument('--dump_device', action='store', type=str, nargs=1, metavar=('OUTPUT_FOLDER'), help='Dump all partitions to a folder')
     argument_parser.add_argument('--restore_device', action='store', type=str, nargs=1, metavar=('INPUT_FOLDER'), help='Restore all partitions from a folder')
+    argument_parser.add_argument('--dont_reset', action='store_true', help='Don\'t factory reset when restoring device. This option does nothing on its own')
     argument_parser.add_argument('--dump_partition', action='store', type=str, nargs=2, metavar=('PARTITION_NAME', 'OUTPUT_FILE'), help='Dump a partition to a file')
     argument_parser.add_argument('--restore_partition', action='store', type=str, nargs=2, metavar=('PARTITION_NAME', 'INPUT_FILE'), help='Restore a partition from a dump file')
     argument_parser.add_argument('--restore_stock_env', action='store_true', help='wipe env, then restore default env values from stock_env.txt')
@@ -283,9 +284,6 @@ if __name__ == '__main__':
                     print(f'Error: missing expected dump file: {FOLDER_NAME}/env.dump')
                     sys.exit(1)
                 convert_env_dump(f'{FOLDER_NAME}/env.dump', f'{FOLDER_NAME}/env.txt')
-            print('Wiping env partition')
-            dev.bulkcmd('amlmmc env')
-            dev.bulkcmd('amlmmc erase env')
             dev.send_env_file(f'{FOLDER_NAME}/env.txt')
             dev.bulkcmd('env save')
             dev.restore_partition('fip_a', f'{FOLDER_NAME}/fip_a.dump')
@@ -302,44 +300,38 @@ if __name__ == '__main__':
             dev.restore_partition('system_b', f'{FOLDER_NAME}/system_b.ext2')
             # handle data and settings partitions last
             if not os.path.exists(f'{FOLDER_NAME}/data.ext4'):
-                print(f'did not find {FOLDER_NAME}/data.ext4, erasing data partition instead')
+                print(f'did not find {FOLDER_NAME}/data.ext4, factory resetting instead')
                 try:
-                    dev.bulkcmd('amlmmc erase data')
+                    if args.dont_reset:
+                        print("--dont_reset specified. Not erasing data.")
+                    else:
+                        dev.bulkcmd('setenv firstboot 1')
+                        dev.bulkcmd('saveenv')
                 except:
                     print("\nErasing data failed. A factory reset is recommended\n")
                     reset_recommend = True
             else:
-                DECODED_CHUNK = test_if_empty('data.ext4')
-                if DECODED_CHUNK == '':
-                    print(f'The first 1MB of {FOLDER_NAME}/data.ext4 are null, erasing data partition instead')
-                    try:
-                        dev.bulkcmd('amlmmc erase data')
-                    except:
-                        print("\nErasing data failed. A factory reset is recommended\n")
-                        reset_recommend = True
-                else:
-                    dev.restore_partition('data', f'{FOLDER_NAME}/data.ext4')
+                dev.restore_partition('data', f'{FOLDER_NAME}/data.ext4')
 
             if not os.path.exists(f'{FOLDER_NAME}/settings.ext4'):
                 print(f'did not find {FOLDER_NAME}/settings.ext4, erasing settings partition instead')
                 try:
-                    dev.bulkcmd('amlmmc erase settings')
+                    if args.dont_reset:
+                        print("--dont_reset specified. Not erasing settings.")
+                    else:
+                        dev.bulkcmd('setenv firstboot 1')
+                        dev.bulkcmd('saveenv')
                 except:
-                    print("\nErasing settings failed. A factory reset is recommended\n")
+                    print("\nErasing data failed. A factory reset is recommended\n")
                     reset_recommend = True
             else:
-                DECODED_CHUNK = test_if_empty('settings.ext4')
-                if DECODED_CHUNK == '':
-                    print(f'The first 1MB of {FOLDER_NAME}/settings.ext4 are null, erasing settings partition instead')
-                    try:
-                        dev.bulkcmd('amlmmc erase settings')
-                    except:
-                        print("\nErasing settings failed. A factory reset is recommended\n")
-                        reset_recommend = True
-                else:
-                    dev.restore_partition('settings', f'{FOLDER_NAME}/settings.ext4')
+                dev.restore_partition('settings', f'{FOLDER_NAME}/settings.ext4')
+
             # always do bootloader last
-            dev.restore_partition('bootloader', f'{FOLDER_NAME}/bootloader.dump')
+            try:
+                dev.restore_partition('bootloader', f'{FOLDER_NAME}/bootloader.dump')
+            except:
+                print("Flashing bootloader failed. If you encounter any issues, try flashing again.")
             print('Device restore complete. Replug your Car Thing to start using it.')
             if reset_recommend:
                 print("\n\nFactory reseting your Car Thing is recommended. You can do this by unplugging your device then replugging it while holding the preset 2 and back buttons. You can let go of the buttons when the Spotify logo appears.")
@@ -383,7 +375,9 @@ if __name__ == '__main__':
         if dev is not None:
             print('Restoring env by first wiping env, then importing stock_env.txt')
             dev.bulkcmd('amlmmc env')
+            time.sleep(1)
             dev.bulkcmd('amlmmc erase env')
+            time.sleep(1)
             dev.send_env_file(ENV_FILE)
             dev.bulkcmd('env save')
     elif args.send_env:
@@ -402,7 +396,9 @@ if __name__ == '__main__':
             # wipe the env partition, then import from given file
             print('Wiping env partition')
             dev.bulkcmd('amlmmc env')
+            time.sleep(1)
             dev.bulkcmd('amlmmc erase env')
+            time.sleep(1)
             print(f'Importing the contents of {ENV_FILE}')
             dev.send_env_file(ENV_FILE)
             dev.bulkcmd('env save')

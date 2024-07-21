@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+* Change the flashing logic to trigger the standard factory reset behavior to avoid a corrupted data/settings partition
+  * Added `--dont_reset` option to skip the factory reset step when doing `--restore_device`
+
 ## 0.1.4
 * Introduced DHCP server and client over RNDIS - Refer to [scripts/usb-gadget/README.md](scripts/usb-gadget/README.md)
   * Rewrote S49usbgadget
