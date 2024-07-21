@@ -4,7 +4,6 @@
 **/._DS_Store
 __pycache__/
 dumps/
-tmp/
 superbird_tool
 superbird_tool.build/
 superbird_tool.bin
