@@ -13,8 +13,6 @@ Contributions are welcome. This code is unlicensed: you can do whatever you want
 
 A [Changelog can be found here](Changelog.md)
 
-NOTE: This is not working well on Windows anymore due to issues with libusb, I suggest using Linux or macOS.
-
 ## Warranty and Liability
 
 None. You definitely can mess up your device in ways that are difficult to recover. I cannot promise a bug in this script will not brick your device.
@@ -76,10 +74,7 @@ sudo ./superbird_tool.py --find_device
 
 Tested on `x86_64`, but it seems really difficult to get this working consistently on Windows. I recommend Linux or macOS.
 
-On Windows, setup is a little more involved. First download and install [python for windows](https://www.python.org/downloads/windows/) (tested with 3.10 and 3.11). Then you need to install drivers; I have included [`windows/USB_Burning_Tool_setup_v2.0.9.exe`](windows/USB_Burning_Tool_setup_v2.0.9.exe), which includes the needed driver.
-The actual USB Burning Tool is not useful for Car Thing, but it includes the right driver.
-
-
+On Windows, setup is a little more involved. First download and install [python for windows](https://www.python.org/downloads/windows/) (tested with 3.10 and 3.11).
 Next you need to install a couple extra packages:
 ```bash
 python -m pip install git+https://github.com/superna9999/pyamlboot
@@ -96,7 +91,13 @@ rem NOTE: Python310 for python 3.10.x
 This [stackoverflow post](https://stackoverflow.com/questions/44272416/how-to-add-a-folder-to-path-environment-variable-in-windows-10-with-screensho)
 has a good visual explanation of how to edit PATH in Windows 10
 
-And finally, you should be able to run the tool
+After doing the above, you'll need to install the correct driver. Start off by downloading [Zadig](https://zadig.akeo.ie/).
+- Once you have it downloaded, open it then put your Car Thing into USB Burn Mode by holding the preset 1 & 4 buttons while plugging it in. The screen should stay black.
+- In Zadig you should see a `GX-CHIP` device appear. When it shows up, click `Edit` then configure Zadig so the options are like this:
+![image](https://github.com/user-attachments/assets/69da7f52-876e-4172-b4fe-dd2732c3c6ee)
+- Click `Install Driver` and wait for it to finish.
+
+Finally, you should be able to run the tool
 ```bash
 python superbird_tool.py --find_device
 ```
@@ -196,15 +197,9 @@ Please do NOT try to use fastboot with superbird device, there is potential to b
 
 ## Persistent USB Gadget with USB Networking
 
-I have provided an [`S49usbgadget`](S49usbgadget), which can be placed on the device at `/etc/init.d/S49usbgadget` (make it executable).
+We have provided a script to set up ADB and USB Networking. You can find it, along with documentation in the [scripts/usb-gadget](scripts/usb-gadget) folder.
 
-This is a modified version of what [frederic provided](https://github.com/frederic/superbird-bulkcmd/blob/main/scripts/enable-adb.sh.client),
-where I added a lot of comments, and added `rndis` function, to allow usb networking in addition to `adb`. 
-
-Please read it carefully before using.
-
-You can try this [host setup script](setup_host_usbnet.sh) to configure a Linux machine as host. 
-I am using a RockPi-E with Armbian Community Kinetic 22.10 with success
+This is a heavily modified version of what [frederic provided](https://github.com/frederic/superbird-bulkcmd/blob/main/scripts/enable-adb.sh.client)
 
 ## Example Usage
 
@@ -230,12 +225,8 @@ sudo ./superbird_tool.py --boot_adb_kernel
 adb devices  # check that your device shows up in adb
 
 # setup persistent USB Gadget (adb and usbnet)
-adb shell mount -o remount,rw /
-adb shell umount /etc/init.d/S49usbgadget
-adb push S49usbgadget /etc/init.d/
-adb shell chmod +x /etc/init.d/S49usbgadget
-adb shell mount -o remount,ro /  # OK if this step fails
-adb shell reboot
+cd scripts/usb-gadget
+./push_usbgadget.sh
 
 # device can take a while to reboot, just watch what the screen does and run --find_device until it shows up
 sudo ./superbird_tool.py --find_device   # check that it is in usb burn mode
