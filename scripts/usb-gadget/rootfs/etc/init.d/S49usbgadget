@@ -22,9 +22,6 @@ echo 0x1d6b > "${usbGadgetDir}"/idVendor  # Linux Vendor ID
 echo 0x1014 > "${usbGadgetDir}"/idProduct # Multifunction Device ID
 echo 0x0100 > "${usbGadgetDir}"/bcdDevice # Device Version/Revision
 echo 0x0200 > "${usbGadgetDir}"/bcdUSB    # USB Version
-echo 0xEF > "${usbGadgetDir}"/bDeviceClass   # Device class
-echo 0x02 > "${usbGadgetDir}"/bDeviceSubClass # Device Subclass
-echo 0x01 > "${usbGadgetDir}"/bDeviceProtocol # Device Protocol
 mkdir -p "${usbGadgetDir}"/strings/0x409  # English strings
 cat /sys/class/efuse/usid > "${usbGadgetDir}"/strings/0x409/serialnumber # Serial Number
 echo Spotify > "${usbGadgetDir}"/strings/0x409/manufacturer              # Manufacturer string
