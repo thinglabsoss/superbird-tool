@@ -1,7 +1,7 @@
 # Cross-Platform Spotify Car Thing (superbird) hacking toolkit
 
 This toolkit re-implements most of the functionality from [frederic's scripts](https://github.com/frederic/superbird-bulkcmd).
-The key difference here, is that this tool uses [`pyamlboot`](https://github.com/superna9999/pyamlboot) instead of the proprietary `update` binary from Amlogic, 
+The key difference here is that this tool uses [`pyamlboot`](https://github.com/superna9999/pyamlboot) instead of the proprietary `update` binary from Amlogic, 
 which allows it to work on many more platforms!
 
 Everything in [`images/`](images/) came directly from [frederic's repo](https://github.com/frederic/superbird-bulkcmd).
@@ -34,10 +34,9 @@ Instead, to dump partitions we first have to tell the device to read a chunk (12
 The copy rate for reading is about `545KB/s`, and in my testing on Ubuntu x86_64 it takes about 110 minutes to dump all partitions!
 
 The same thing must be done in reverse to restore a partition, but writing is much faster, and we can use larger chunks (512KB), 
-so copy rate for writing is about `4.9MB/s`, and it takes about 17 minutes to write all partitions.
+so copy rate for writing is about `5.1MB/s`, and it takes about 11 minutes to write all partitions. If the `data` and `settings` partitions are omitted,
+it takes about 4 minutes to write.
 
-Partitions 2MB and smaller can be written in a single chunk, but using 2MB chunks for larger partitions eventually fails about 300MB through; I have not yet figured out why.
-In the meantime, it seems that 512KB chunks work well for larger partitions.
 
 ## Supported Platforms
 
@@ -110,42 +109,51 @@ python superbird_tool.py --burn_mode
 ## Usage
 
 ```
-Options cannot be combined; do one thing at a time :)
+General:
+  -h, --help            Show this help message and exit
+  --find_device         Find superbird device and show its current boot mode
+  --burn_mode           Enter USB Burn Mode (if currently in USB Mode)
+  --continue_boot       Continue booting normally (if currently in USB Burn Mode)
 
-options:
-  -h, --help            show this help message and exit
-  --find_device         find superbird device and show its current boot mode
-  --burn_mode           enter USB Burn Mode (if currently in USB Mode)
-  --continue_boot       continue booting normally (if currently in USB Burn Mode)
-  --bulkcmd COMMAND     run a uboot command on the device
+Booting:
   --boot_adb_kernel BOOT_SLOT
-                        boot a kernel with adb enabled on chosen slot (A or B)(not persistent)
-  --enable_uart_shell   enable UART shell
+                        Boot a kernel with adb enabled on chosen slot (A or B)(not persistent)
   --disable_avb2 BOOT_SLOT
-                        disable A/B booting, lock to chosen slot(A or B)
-  --enable_burn_mode    enable USB Burn Mode at every boot (when connected to USB host)
+                        Disable A/B booting, lock to chosen slot(A or B)
+  --enable_burn_mode    Enable USB Burn Mode at every boot (when connected to USB host)
   --enable_burn_mode_button
-                        enable USB Burn Mode if preset button 4 is held while booting (when connected to USB host)
-  --disable_burn_mode   Disable USB Burn Mode at every boot (when connected to USB host)
+                        Enable USB Burn Mode if preset button 4 is held while booting (when connected to USB host)
+  --disable_burn_mode   Disable USB Burn Mode
   --disable_charger_check
-                        disable check for valid charger at boot
+                        Disable check for valid charger at boot
   --enable_charger_check
-                        enable check for valid charger at boot
-  --dump_device OUTPUT_FOLDER
-                        Dump all partitions to a folder
+                        Enable check for valid charger at boot
+
+Restoring:
   --restore_device INPUT_FOLDER
                         Restore all partitions from a folder
-  --dump_partition PARTITION_NAME OUTPUT_FILE
-                        Dump a partition to a file
   --restore_partition PARTITION_NAME INPUT_FILE
                         Restore a partition from a dump file
-  --restore_stock_env   wipe env, then restore default env values from stock_env.txt
-  --send_env ENV_TXT    import contents of given env.txt file (without wiping)
+  --dont_reset          Don't factory reset when restoring device. Use in combination with restore commands.
+
+Dumping:
+  --dump_device OUTPUT_FOLDER
+                        Dump all partitions to a folder
+  --dump_partition PARTITION_NAME OUTPUT_FILE
+                        Dump a partition to a file
+
+U-Boot Enviroment:
+  --get_env ENV_TXT     Dump device env partition, and convert it to env.txt format
+  --send_env ENV_TXT    Import contents of given env.txt file (without wiping)
   --send_full_env ENV_TXT
-                        wipe env, then import contents of given env.txt file
+                        Wipe env, then import contents of given env.txt file
+  --restore_stock_env   Wipe env, then restore default env values from stock_env.txt
   --convert_env_dump ENV_DUMP OUTPUT_TXT
-                        convert a local dump of env partition into text format
-  --get_env ENV_TXT     dump device env partition, and convert it to env.txt format
+                        Convert a local dump of env partition into text format
+Advanced:
+  --bulkcmd COMMAND     Run a uboot command on the device
+  --enable_uart_shell   Enable UART shell
+
 ```
 
 ## Boot Modes
@@ -211,14 +219,14 @@ As an example (on Linux), here are steps to enable persistent adb and usbnet, di
 # plug in with buttons 1 & 4 held
 sudo ./superbird_tool.py --find_device  # check that it is in usb mode
 sudo ./superbird_tool.py --burn_mode
-sudo ./superbird_tool.py --enable_burn_mode
-sudo ./superbird_tool.py --disable_avb2  # disable A/B, lock to A
+sudo ./superbird_tool.py --enable_burn_mode_button
+sudo ./superbird_tool.py --disable_avb2 a # disable A/B, lock to A
 sudo ./superbird_tool.py --disable_charger_check
 
-# unplug and replug without holding any buttons
+# unplug and replug while holding button 4
 
 sudo ./superbird_tool.py --find_device   # check that it is in usb burn mode
-sudo ./superbird_tool.py --boot_adb_kernel
+sudo ./superbird_tool.py --boot_adb_kernel a
 
 # device boots to spotify logo, but app does not launch
 
@@ -227,10 +235,6 @@ adb devices  # check that your device shows up in adb
 # setup persistent USB Gadget (adb and usbnet)
 cd scripts/usb-gadget
 ./push_usbgadget.sh
-
-# device can take a while to reboot, just watch what the screen does and run --find_device until it shows up
-sudo ./superbird_tool.py --find_device   # check that it is in usb burn mode
-sudo ./superbird_tool.py --disable_burn_mode
 
 # unplug and replug without holding any buttons
 #   it should boot normally (app should launch), now with adb and usbnet enabled
@@ -241,9 +245,7 @@ ip addr  # you should see usb0 listed
 ## Known Issues
 * The option `--enable_uart_shell` is really only meant to be run on a fresh device. It will rewrite `initargs` env var, removing any other changes you made like using a particular system partition every boot.
 * The option `--disable_avb2` will ALSO enable the uart shell; consider using that instead.
-* if you use `--disable_burn_mode`, then boot to USB Mode (hold 1 & 4), and use `--burn_mode`, followed by `--boot_adb_kernel`, it will fail with an error about device tree
-  * not sure why this is happening, if you do `--enable_burn_mode`, let it boot to USB Burn Mode automatically, then use `--boot_adb_kernel`, it works fine
-  * another workaround is to make USB Gadget persistent (see section above), then you do not need `--boot_adb_kernel`
+* If you boot from USB mode into burn mode (using `--burn_mode`), `--boot_adb_kernel` won't work. This is due to u-boot not setting up some parts of the hardware.
 * In some cases you might get a Timeout Error. This happens sometimes if a previous command failed, and you just need to power cycle the device (actually unplug and plug it back in), and try again. 
   * ALSO, avoid connecting the device through a USB hub. In my testing, I had many more timeout issues when using a hub.
   * You might need to power cycle and try again multiple times

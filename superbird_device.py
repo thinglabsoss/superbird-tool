@@ -158,9 +158,13 @@ class SuperbirdDevice:
     TIMEOUT_COMMANDS = ['booti', 'bootm', 'bootp', 'mw.b', 'reset', 'reboot']
     PARTITIONS = SUPERBIRD_PARTITIONS
     PART_SECTOR_SIZE = 512  # bytes, size of sectors used in partition table
-    TRANSFER_BLOCK_SIZE = 8 * PART_SECTOR_SIZE  # 4KB data transfered into memory one block at a time
-    WRITE_CHUNK_SIZE = 1024 * PART_SECTOR_SIZE  # 512KB chunk written to memory, then gets written to mmc
+    MULTIPLIER = 8 # Set to 4 if you experience crashes while flashing. Set to 1 if problems persist
+    TRANSFER_BLOCK_SIZE = ( 8 * MULTIPLIER ) * PART_SECTOR_SIZE  # 4KB data transfered into memory one block at a time
+    WRITE_CHUNK_SIZE = ( 1024 * MULTIPLIER ) * PART_SECTOR_SIZE  # 512KB chunk written to memory, then gets written to mmc
     READ_CHUNK_SIZE = 256 * PART_SECTOR_SIZE  # 128KB chunk read from mmc into memory, then read out to local file
+    
+    
+    
     # writes larger than threshold will be broken into chunks of WRITE_CHUNK_SIZE
     TRANSFER_SIZE_THRESHOLD = 2 * 1024 * 1024  # 2MB
 
@@ -365,7 +369,7 @@ class SuperbirdDevice:
                 print(f'Failed while validating size of partition: {part_name}, is partition size {hex(part_size)} correct? error: {extest}')
                 return (None, None)
         stdout_clear_lines(1)
-        print(f'Validating size of partition: {part_name} size: {hex(part_size)} {round(part_size / 1024 / 1024)}MB - OK')
+        print(f'\nValidating size of partition: {part_name} size: {hex(part_size)} {round(part_size / 1024 / 1024)}MB - OK')
         return (part_size, part_offset)
 
     def dump_partition(self, part_name:str, outfile:str):
@@ -408,7 +412,7 @@ class SuperbirdDevice:
                         else:
                             speed = round((offset / elapsed) / 1024)  # in KB/s
                         self.print(f'dumping partition: "{part_name}" {hex(part_offset)}+{hex(offset)} into file: {outfile} ')
-                        self.print(f'chunk_size: {chunk_size / 1024}KB, speed: {speed}KB/s progress: {progress}% remaining: {round(remaining / 1024 / 1024)}MB / {round(part_size / 1024 / 1024)}MB')
+                        self.print(f'chunk_size: {chunk_size / 1024}KB | speed: {speed}KB/s | progress: {progress}% | remaining: {round(remaining / 1024 / 1024)}MB / {round(part_size / 1024 / 1024)}MB')
                         self.bulkcmd(f'amlmmc read {part_name} {hex(self.ADDR_TMP)} {hex(offset)} {hex(chunk_size)}', silent=True)
                         rdata = self.read_memory(self.ADDR_TMP, chunk_size)
                         ofl.raw.write(rdata)
@@ -472,7 +476,7 @@ class SuperbirdDevice:
                         data = ifl.read(chunk_size)
                         remaining -= chunk_size
                         self.print(f'writing partition: "{part_name}" {hex(part_offset)}+{hex(offset)} from file: {infile}')
-                        self.print(f'chunk_size: {chunk_size / 1024}KB, speed: {speed}MB/s progress: {progress}% remaining: {round(remaining / 1024 / 1024)}MB / {round(part_size / 1024 / 1024)}MB')
+                        self.print(f'chunk_size: {chunk_size / 1024}KB | speed: {speed}MB/s | progress: {progress}% | remaining: {round(remaining / 1024 / 1024)}MB / {round(part_size / 1024 / 1024)}MB')
                         self.device.writeLargeMemory(self.ADDR_TMP, data, self.TRANSFER_BLOCK_SIZE, appendZeros=True)
                         if part_name == 'bootloader':
                             # bootloader always causes timeout

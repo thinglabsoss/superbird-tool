@@ -19,7 +19,7 @@ from uboot_env import read_environ
 from superbird_device import SuperbirdDevice
 from superbird_device import find_device, check_device_mode, enter_burn_mode
 
-VERSION = '0.1.5'
+VERSION = '0.1.6'
 
 # this method chosen specifically because it works correctly when bundled using nuitka --onefile
 IMAGES_PATH = Path(os.path.dirname(__file__)).joinpath('images')
@@ -63,13 +63,63 @@ def rename_parts(folderpath):
             continue
 
 if __name__ == '__main__':
-    print(f'Spotify Car Thing (superbird) toolkit, v{VERSION}, by Car-Thing-Hax-Community')
-    print('     https://github.com/Car-Thing-Hax-Community/superbird-tool   ')
+    print(f'Spotify Car Thing (superbird) toolkit, v{VERSION}, by Thing Labs and Bishop Dynamics')
+    print('     https://github.com/thinglabsoss/superbird-tool   ')
     print('     Forked from https://github.com/bishopdynamics/superbird-tool')
     print('')
     argument_parser = argparse.ArgumentParser(
-        description='Options cannot be combined; do one thing at a time :)'
+        description='Options cannot be combined; do one thing at a time :)',
+        add_help=False
     )
+
+    def print_help():
+        print("""General:
+  -h, --help            Show this help message and exit
+  --find_device         Find superbird device and show its current boot mode
+  --burn_mode           Enter USB Burn Mode (if currently in USB Mode)
+  --continue_boot       Continue booting normally (if currently in USB Burn Mode)
+
+Booting:
+  --boot_adb_kernel BOOT_SLOT
+                        Boot a kernel with adb enabled on chosen slot (A or B)(not persistent)
+  --disable_avb2 BOOT_SLOT
+                        Disable A/B booting, lock to chosen slot(A or B)
+  --enable_burn_mode    Enable USB Burn Mode at every boot (when connected to USB host)
+  --enable_burn_mode_button
+                        Enable USB Burn Mode if preset button 4 is held while booting (when connected to USB host)
+  --disable_burn_mode   Disable USB Burn Mode
+  --disable_charger_check
+                        Disable check for valid charger at boot
+  --enable_charger_check
+                        Enable check for valid charger at boot
+
+Restoring:
+  --restore_device INPUT_FOLDER
+                        Restore all partitions from a folder
+  --restore_partition PARTITION_NAME INPUT_FILE
+                        Restore a partition from a dump file
+  --dont_reset          Don't factory reset when restoring device. Use in combination with restore commands.
+
+Dumping:
+  --dump_device OUTPUT_FOLDER
+                        Dump all partitions to a folder
+  --dump_partition PARTITION_NAME OUTPUT_FILE
+                        Dump a partition to a file
+
+U-Boot Enviroment:
+  --get_env ENV_TXT     Dump device env partition, and convert it to env.txt format
+  --send_env ENV_TXT    Import contents of given env.txt file (without wiping)
+  --send_full_env ENV_TXT
+                        Wipe env, then import contents of given env.txt file
+  --restore_stock_env   Wipe env, then restore default env values from stock_env.txt
+  --convert_env_dump ENV_DUMP OUTPUT_TXT
+                        Convert a local dump of env partition into text format
+Advanced:
+  --bulkcmd COMMAND     Run a uboot command on the device
+  --enable_uart_shell   Enable UART shell
+
+""")
+
     argument_parser.add_argument('--find_device', action='store_true', help='find superbird device and show its current boot mode')
     argument_parser.add_argument('--burn_mode', action='store_true', help='enter USB Burn Mode (if currently in USB Mode)')
     argument_parser.add_argument('--continue_boot', action='store_true', help='continue booting normally (if currently in USB Burn Mode)')
@@ -92,6 +142,7 @@ if __name__ == '__main__':
     argument_parser.add_argument('--send_full_env', action='store', type=str, nargs=1, metavar=('ENV_TXT'), help='wipe env, then import contents of given env.txt file')
     argument_parser.add_argument('--convert_env_dump', action='store', type=str, nargs=2, metavar=('ENV_DUMP', 'OUTPUT_TXT'), help='convert a local dump of env partition into text format')
     argument_parser.add_argument('--get_env', action='store', type=str, nargs=1, metavar=('ENV_TXT'), help='dump device env partition, and convert it to env.txt format')
+    argument_parser.add_argument('--help', '-h', action='store_true', dest='help')
 
     args = argument_parser.parse_args()
 
@@ -105,7 +156,9 @@ if __name__ == '__main__':
             sys.exit(1)
 
     # First check options that do not need the device
-
+    if args.help:
+        print_help()
+        sys.exit()
     if args.find_device:
         find_device()
         sys.exit()

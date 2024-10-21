@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.6
+* Increased flashing speed
+* Improved readability
+* Updated documentation
+
 ## 0.1.5
 * Change the flashing logic to trigger the standard factory reset behavior to avoid a corrupted data/settings partition
   * Added `--dont_reset` option to skip the factory reset step when doing `--restore_device`
