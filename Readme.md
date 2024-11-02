@@ -243,6 +243,7 @@ ip addr  # you should see usb0 listed
 ```
 
 ## Known Issues
+* Sometimes flashing can fail mid flash, especially while flashing bigger partitions like `system`. If this happens, try opening `superbird_device.py` in a text editor, go to line 161, and change the `MULTIPlLIER` parameter from `8` to `4`. If problems persist, change it to `1`. This will be a command flag in the future.
 * The option `--enable_uart_shell` is really only meant to be run on a fresh device. It will rewrite `initargs` env var, removing any other changes you made like using a particular system partition every boot.
 * The option `--disable_avb2` will ALSO enable the uart shell; consider using that instead.
 * If you boot from USB mode into burn mode (using `--burn_mode`), `--boot_adb_kernel` won't work. This is due to u-boot not setting up some parts of the hardware.
