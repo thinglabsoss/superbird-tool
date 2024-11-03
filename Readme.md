@@ -135,6 +135,8 @@ Restoring:
   --restore_partition PARTITION_NAME INPUT_FILE
                         Restore a partition from a dump file
   --dont_reset          Don't factory reset when restoring device. Use in combination with restore commands.
+  --slow_burn           Use a slower burning speed. Use this if restoring crashes mid-flash.
+  --slower_burn         Use an even slower burning speed. Use this if --slow_burn doesn't work.
 
 Dumping:
   --dump_device OUTPUT_FOLDER

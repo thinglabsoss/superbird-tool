@@ -158,17 +158,23 @@ class SuperbirdDevice:
     TIMEOUT_COMMANDS = ['booti', 'bootm', 'bootp', 'mw.b', 'reset', 'reboot']
     PARTITIONS = SUPERBIRD_PARTITIONS
     PART_SECTOR_SIZE = 512  # bytes, size of sectors used in partition table
-    MULTIPLIER = 8 # Set to 4 if you experience crashes while flashing. Set to 1 if problems persist
+    MULTIPLIER = 8 # Can be reduced with --slow_burn or --slower_burn 
     TRANSFER_BLOCK_SIZE = ( 8 * MULTIPLIER ) * PART_SECTOR_SIZE  # 4KB data transfered into memory one block at a time
     WRITE_CHUNK_SIZE = ( 1024 * MULTIPLIER ) * PART_SECTOR_SIZE  # 512KB chunk written to memory, then gets written to mmc
-    READ_CHUNK_SIZE = 256 * PART_SECTOR_SIZE  # 128KB chunk read from mmc into memory, then read out to local file
-    
-    
-    
+    READ_CHUNK_SIZE = 128 * PART_SECTOR_SIZE  # 128KB chunk read from mmc into memory, then read out to local file
+
     # writes larger than threshold will be broken into chunks of WRITE_CHUNK_SIZE
     TRANSFER_SIZE_THRESHOLD = 2 * 1024 * 1024  # 2MB
 
-    def __init__(self) -> None:
+    def __init__(self, slowBurn = False, slowerBurn = False) -> None:
+        if slowerBurn:
+            self.MULTIPLIER = 1
+            self.TRANSFER_BLOCK_SIZE = ( 8 * self.MULTIPLIER ) * self.PART_SECTOR_SIZE  # Base 4KB data transfered into memory one block at a time
+            self.WRITE_CHUNK_SIZE = ( 1024 * self.MULTIPLIER ) * self.PART_SECTOR_SIZE  # 512KB chunk written to memory, then gets written to mmc
+        elif slowBurn:
+            self.MULTIPLIER = 4
+            self.TRANSFER_BLOCK_SIZE = ( 8 * self.MULTIPLIER ) * self.PART_SECTOR_SIZE  # Base 4KB data transfered into memory one block at a time
+            self.WRITE_CHUNK_SIZE = ( 1024 * self.MULTIPLIER ) * self.PART_SECTOR_SIZE  # 512KB chunk written to memory, then gets written to mmc
         try:
             self.device = pyamlboot.AmlogicSoC()
         except ValueError:

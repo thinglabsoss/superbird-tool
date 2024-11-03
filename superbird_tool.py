@@ -19,7 +19,7 @@ from uboot_env import read_environ
 from superbird_device import SuperbirdDevice
 from superbird_device import find_device, check_device_mode, enter_burn_mode
 
-VERSION = '0.1.6'
+VERSION = '0.1.7'
 
 # this method chosen specifically because it works correctly when bundled using nuitka --onefile
 IMAGES_PATH = Path(os.path.dirname(__file__)).joinpath('images')
@@ -99,6 +99,8 @@ Restoring:
   --restore_partition PARTITION_NAME INPUT_FILE
                         Restore a partition from a dump file
   --dont_reset          Don't factory reset when restoring device. Use in combination with restore commands.
+  --slow_burn           Use a slower burning speed. Use this if restoring crashes mid-flash.
+  --slower_burn         Use an even slower burning speed. Use this if --slow_burn doesn't work.
 
 Dumping:
   --dump_device OUTPUT_FOLDER
@@ -135,6 +137,8 @@ Advanced:
     argument_parser.add_argument('--dump_device', action='store', type=str, nargs=1, metavar=('OUTPUT_FOLDER'), help='Dump all partitions to a folder')
     argument_parser.add_argument('--restore_device', action='store', type=str, nargs=1, metavar=('INPUT_FOLDER'), help='Restore all partitions from a folder')
     argument_parser.add_argument('--dont_reset', action='store_true', help='Don\'t factory reset when restoring device. This option does nothing on its own')
+    argument_parser.add_argument('--slow_burn', action='store_true', help='Use a slower burning speed. Use this if restoring crashes mid-flash.')
+    argument_parser.add_argument('--slower_burn', action='store_true', help='Use an even slower burning speed. Use this if --slow_burn doesn\'t work.')
     argument_parser.add_argument('--dump_partition', action='store', type=str, nargs=2, metavar=('PARTITION_NAME', 'OUTPUT_FILE'), help='Dump a partition to a file')
     argument_parser.add_argument('--restore_partition', action='store', type=str, nargs=2, metavar=('PARTITION_NAME', 'INPUT_FILE'), help='Restore a partition from a dump file')
     argument_parser.add_argument('--restore_stock_env', action='store_true', help='wipe env, then restore default env values from stock_env.txt')
@@ -143,6 +147,11 @@ Advanced:
     argument_parser.add_argument('--convert_env_dump', action='store', type=str, nargs=2, metavar=('ENV_DUMP', 'OUTPUT_TXT'), help='convert a local dump of env partition into text format')
     argument_parser.add_argument('--get_env', action='store', type=str, nargs=1, metavar=('ENV_TXT'), help='dump device env partition, and convert it to env.txt format')
     argument_parser.add_argument('--help', '-h', action='store_true', dest='help')
+
+    # Override the default help text
+    if len(sys.argv) == 1:
+        print_help()
+        sys.exit(1)
 
     args = argument_parser.parse_args()
 
@@ -170,7 +179,15 @@ Advanced:
 
     # Now get the device, and check options that need it
     START_TIME = time.time()
-    dev = SuperbirdDevice()
+    if args.slower_burn:
+        print("Using slower burn speed")
+        dev = SuperbirdDevice(slowerBurn=True)
+    elif args.slow_burn:
+        print("Using slow burn speed")
+        dev = SuperbirdDevice(slowBurn=True)
+    else:
+        dev = SuperbirdDevice()
+    
 
     if args.bulkcmd:
         dev = enter_burn_mode(dev)

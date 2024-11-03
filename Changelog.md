@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7
+* Added `--slow_burn` and `--slower_burn` to slow down restore speed. This can help in cases where flashing fails in the middle of
+bigger partitions.
+
 ## 0.1.6
 * Increased flashing speed
 * Improved readability
