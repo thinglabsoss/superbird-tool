@@ -81,25 +81,16 @@ Tested on `x86_64`, but it seems really difficult to get this working consistent
 On Windows, setup is a little more involved. First download and install [python for windows](https://www.python.org/downloads/windows/) (tested with 3.10 and 3.11).
 Next you need to install a couple extra packages:
 ```bash
-python -m pip install git+https://github.com/superna9999/pyamlboot
-python -m pip install pyusb
-python -m pip install libusb
+python -m pip install pyusb git+https://github.com/superna9999/pyamlboot
 ```
-
-You also need to add to add to your PATH: 
-
-```bat
-rem NOTE: Python310 for python 3.10.x
-%LOCALAPPDATA%\Programs\Python\Python310\Lib\site-packages\libusb\_platform\_windows\x64
-```
-This [stackoverflow post](https://stackoverflow.com/questions/44272416/how-to-add-a-folder-to-path-environment-variable-in-windows-10-with-screensho)
-has a good visual explanation of how to edit PATH in Windows 10
 
 After doing the above, you'll need to install the correct driver. Start off by downloading [Zadig](https://zadig.akeo.ie/).
 - Once you have it downloaded, open it then put your Car Thing into USB Burn Mode by holding the preset 1 & 4 buttons while plugging it in. The screen should stay black.
 - In Zadig you should see a `GX-CHIP` device appear. When it shows up, click `Edit` then configure Zadig so the options are like this:
 ![image](https://github.com/user-attachments/assets/69da7f52-876e-4172-b4fe-dd2732c3c6ee)
 - Click `Install Driver` and wait for it to finish.
+
+Note: If commands like `--find_device` or `--burn_mode` don't work, try installing the WinUSB driver instead of libusb
 
 Finally, you should be able to run the tool
 ```bash
