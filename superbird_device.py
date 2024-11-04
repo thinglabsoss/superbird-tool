@@ -99,7 +99,7 @@ def check_device_mode(mode:str, silent:bool=False):
         if not silent:
             print('Device is not booted to the correct mode!')
             if platform.system() == "Windows":
-                print("Make sure you've installed the correct driver using Zadig.)
+                print("Make sure you've installed the correct driver using Zadig.")
         if mode == 'usb':
             if not silent:
                 print('     need to power on while holding buttons 1 & 4 to enter USB Mode')
