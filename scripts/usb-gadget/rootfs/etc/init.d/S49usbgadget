@@ -9,14 +9,15 @@
 rndisEnable="true" # Set to false if you only want ADBa
 ipMode="dhserver"
 
+printToKmsg() { echo $1 && echo $1 > /dev/kmsg; } # Log to dmesg for easier debugging
 usbGadgetDir="/sys/kernel/config/usb_gadget/g1"
-echo "configuring USB Gadget with adb and rndis (if enabled)"
+printToKmsg "USB_GADGET: configuring USB Gadget with adb and rndis (if enabled)"
 # Create device nodes
 mkdir -p /dev/usb-ffs/adb
 mount -t configfs none /sys/kernel/config/
 
 # Create USB gadget
-echo "Creating USB gadget"
+printToKmsg "USB_GADGET: Creating USB gadget"
 mkdir -p /sys/kernel/config/usb_gadget/g1
 echo 0x1d6b > "${usbGadgetDir}"/idVendor  # Linux Vendor ID
 echo 0x1014 > "${usbGadgetDir}"/idProduct # Multifunction Device ID
@@ -29,26 +30,26 @@ echo Superbird > "${usbGadgetDir}"/strings/0x409/product                 # Devic
 
 # Convinces Windows to properly load RNDIS driver
 echo 1       > "${usbGadgetDir}"/os_desc/use # Tells gadget to use values in os_desc
-echo 0xcd    > "${usbGadgetDir}"/os_desc/b_vendor_code 
+echo 0xcd    > "${usbGadgetDir}"/os_desc/b_vendor_code
 echo MSFT100 > "${usbGadgetDir}"/os_desc/qw_sign
 
 # Create the gadget config
-echo "Creating gadget config"
+printToKmsg "USB_GADGET: Creating gadget config"
 mkdir "${usbGadgetDir}"/configs/c.1
 echo "500" > "${usbGadgetDir}"/configs/c.1/MaxPower
 
 # ------ ADB Configuration ------
-echo "Configuring ADB function"
+printToKmsg "USB_GADGET: Configuring ADB function"
 mkdir -p "${usbGadgetDir}"/functions/ffs.adb
 mount -t functionfs adb /dev/usb-ffs/adb
-echo "starting adb daemon"
+printToKmsg "USB_GADGET: Starting adb daemon"
 /usr/bin/adbd &
 sleep 3s # Give adbd some time to exist
 # -------------------------------
 
 # ----- RNDIS Configuration -----
 if [[ $rndisEnable = "true" ]]; then
-    echo "Configuring RNDIS function"
+    printToKmsg "USB_GADGET: Configuring RNDIS function"
     mkdir -p "${usbGadgetDir}"/functions/rndis.usb0
     echo "a0:b1:c2:d3:e4:00" > "${usbGadgetDir}"/functions/rndis.usb0/dev_addr
     echo "a0:b1:c2:d3:e4:01" > "${usbGadgetDir}"/functions/rndis.usb0/host_addr
@@ -59,18 +60,18 @@ fi
 
 # -------------------------------
 
-echo "Attaching functions to gadget config"
+printToKmsg "USB_GADGET: Attaching functions to gadget config"
 if [[ $rndisEnable = "true" ]]; then ln -s "${usbGadgetDir}"/functions/rndis.usb0 "${usbGadgetDir}"/configs/c.1; fi
 ln -s "${usbGadgetDir}"/functions/ffs.adb "${usbGadgetDir}"/configs/c.1
 ln -s "${usbGadgetDir}"/configs/c.1 "${usbGadgetDir}"/os_desc
 # Bind gadget to the USB device
-echo "Binding gadget to USB device"
+printToKmsg "USB_GADGET: Binding gadget to USB device"
 UDC_DEVICE=$(ls -1 /sys/class/udc/)
 echo "$UDC_DEVICE" > /sys/kernel/config/usb_gadget/g1/UDC
 
 # ----- usb0 Configuration
 if [[ $rndisEnable = "true" ]]; then
-    echo "Configuring usb0"
+    printToKmsg "USB_GADGET: Configuring usb0"
     ntpd # Start NTPd. If we get an IP thru DHCP this will sync the clock
     sleep 3s # Wait a few seconds to allow the interface to come up
     ifconfig usb0 up
@@ -79,16 +80,17 @@ if [[ $rndisEnable = "true" ]]; then
         staticIp="192.168.7.2"
         staticBroadcast="192.168.7.255"
         staticRoute="192.168.7.1"
-        echo "Configuring static IP"
+        printToKmsg "USB_GADGET: Configuring static IP as ${staticIp}"
         ifconfig usb0 ${staticIp} netmask 255.255.255.0 broadcast ${staticBroadcast}
         ip route add default via ${staticRoute} dev usb0
         if [[ $ipMode = "dhserver" ]]; then
+            printToKmsg "USB_GADGET: Starting DHCP Server"
             coredhcp -N &
         fi
     elif [[ $ipMode = "dhclient" ]]; then
-        echo "Starting DHCP Client"
+        printToKmsg "USB_GADGET: Starting DHCP Client"
         udhcpc -b -i usb0 -p /var/run/lan_udhcpc.pid -R -s /etc/udhcpc/default.script -t 1 -T 3 -A 3 &
     fi
 fi
 
-echo "USB done"
+printToKmsg "USB_GADGET: USB done"
