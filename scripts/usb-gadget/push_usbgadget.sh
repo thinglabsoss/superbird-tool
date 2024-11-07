@@ -11,6 +11,8 @@ adb shell chmod +x /tmp/busybox
 adb shell chmod +x /bin/coredhcp
 adb shell chmod +x /etc/init.d/S49usbgadget
 adb shell chmod +x /etc/udhcpc/default.script
+adb shell chmod +x /etc/udev/rules.d/50-usb.rules
+adb shell chmod +x /sbin/restart_usb
 adb shell mv /tmp/busybox /bin
 adb shell busybox --install
 adb shell sync

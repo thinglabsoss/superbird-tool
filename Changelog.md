@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.8
+* Small change to --dont_reset command. Sets firstboot to 0 to ensure erases don't happen
+
 ## 0.1.7
 * Added `--slow_burn` and `--slower_burn` to slow down restore speed. This can help in cases where flashing fails in the middle of
 bigger partitions.

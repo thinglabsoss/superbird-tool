@@ -19,7 +19,7 @@ from uboot_env import read_environ
 from superbird_device import SuperbirdDevice
 from superbird_device import find_device, check_device_mode, enter_burn_mode
 
-VERSION = '0.1.7'
+VERSION = '0.1.8'
 
 # this method chosen specifically because it works correctly when bundled using nuitka --onefile
 IMAGES_PATH = Path(os.path.dirname(__file__)).joinpath('images')
@@ -374,6 +374,8 @@ Advanced:
                 try:
                     if args.dont_reset:
                         print("--dont_reset specified. Not erasing data.")
+                        dev.bulkcmd('setenv firstboot 0')
+                        dev.bulkcmd('saveenv')
                     else:
                         dev.bulkcmd('setenv firstboot 1')
                         dev.bulkcmd('saveenv')
@@ -388,6 +390,8 @@ Advanced:
                 try:
                     if args.dont_reset:
                         print("--dont_reset specified. Not erasing settings.")
+                        dev.bulkcmd('setenv firstboot 0')
+                        dev.bulkcmd('saveenv')
                     else:
                         dev.bulkcmd('setenv firstboot 1')
                         dev.bulkcmd('saveenv')
