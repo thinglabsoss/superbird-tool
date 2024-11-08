@@ -2,6 +2,14 @@
 
 printToKmsg() { echo $1 && echo $1 > /dev/kmsg; } # Log to dmesg for easier debugging
 
+# Keeps this script from interfering with S49usbgadget on boot
+if [ -e /var/run/usb_gadget_done ]; then
+   printToKmsg "restart_usb: usb_gadget is done"
+else
+   printToKmsg "restart_usb: usb_gadget hasn't run. Exiting"
+   exit 1
+fi
+
 if [ -e /sys/class/android_usb/android0/state ]; then
    printToKmsg "restart_usb: android0 exists"
 else

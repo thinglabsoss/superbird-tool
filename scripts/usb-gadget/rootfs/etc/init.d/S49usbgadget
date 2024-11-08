@@ -93,4 +93,9 @@ if [[ $rndisEnable = "true" ]]; then
     fi
 fi
 
+# Prevent the restart_usb script from interfering
+printToKmsg "USB_GADGET: Creating complete flag"
+echo 1 > /var/run/usb_gadget_done
+chattr +i /var/run/usb_gadget_done
+
 printToKmsg "USB_GADGET: USB done"
