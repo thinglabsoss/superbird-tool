@@ -3,7 +3,7 @@ These scripts and files will enable ADB and RNDIS (USB Networking) on the Car Th
 ### This does not work on MacOS
 MacOS lacks the RNDIS drivers needed to commmunicate with the Car Thing. If you find a driver that works, please open an issue or tell us in the Discord!
 
-## Modes
+## RNDIS / Network Modes
 There are 3 modes you can put the RNDIS gadget in:
 * `dhserver` - Default
   * This will set the IP of your Car Thing to `192.168.7.2` and give your PC an IP of `192.168.7.1`
