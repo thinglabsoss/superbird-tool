@@ -1,0 +1,44 @@
+name: Build superbird-tool executable
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: python -m pip install pyusb git+https://github.com/superna9999/pyamlboot nuitka
+
+      - name: Build executable
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: superbird_tool.py
+          output-file: superbird-tool
+          macos-target-arch: x86_64
+          onefile: true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: superbird-tool ${{ runner.os }}
+          path: |
+            build/superbird-tool.exe
+            build/superbird-tool
