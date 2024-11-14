@@ -33,12 +33,12 @@ jobs:
           script-name: superbird_tool.py
           output-file: superbird-tool
           macos-target-arch: x86_64
-          onefile: true
+          onefile: false
+          standalone: true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: superbird-tool ${{ runner.os }}
           path: |
-            build/superbird-tool.exe
-            build/superbird-tool
+            build/superbird_tool.dist/*
