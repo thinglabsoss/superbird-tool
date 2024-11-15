@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.9
+* Now runs `amlmmc env` before trying to read env
+
 ## 0.1.8
 * Small change to --dont_reset command. Sets firstboot to 0 to ensure erases don't happen
 

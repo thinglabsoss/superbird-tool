@@ -19,7 +19,7 @@ from uboot_env import read_environ
 from superbird_device import SuperbirdDevice
 from superbird_device import find_device, check_device_mode, enter_burn_mode
 
-VERSION = '0.1.8'
+VERSION = '0.1.9'
 
 # this method chosen specifically because it works correctly when bundled using nuitka --onefile
 IMAGES_PATH = Path(os.path.dirname(__file__)).joinpath('images')
@@ -482,6 +482,7 @@ Advanced:
         if dev is not None:
             with tempfile.NamedTemporaryFile() as TEMP_FILE:
                 print(f'Getting current env and writing to text file: {ENV_FILE}')
+                dev.bulkcmd("amlmmc env")
                 dev.dump_partition('env', TEMP_FILE.name)
                 convert_env_dump(TEMP_FILE.name, ENV_FILE)
 
