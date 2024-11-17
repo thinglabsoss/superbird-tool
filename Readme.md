@@ -13,6 +13,8 @@ Contributions are welcome. This code is unlicensed: you can do whatever you want
 
 A [Changelog can be found here](Changelog.md)
 
+### Want an easier way to flash your Car Thing? Try [https://terbium.app](https://terbium.app)!
+
 ## Warranty and Liability
 
 None. You definitely can mess up your device in ways that are difficult to recover. I cannot promise a bug in this script will not brick your device.
