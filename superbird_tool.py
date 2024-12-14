@@ -19,7 +19,7 @@ from uboot_env import read_environ
 from superbird_device import SuperbirdDevice
 from superbird_device import find_device, check_device_mode, enter_burn_mode
 
-VERSION = '0.1.9'
+VERSION = '0.2.0'
 
 # this method chosen specifically because it works correctly when bundled using nuitka --onefile
 IMAGES_PATH = Path(os.path.dirname(__file__)).joinpath('images')
@@ -118,7 +118,8 @@ U-Boot Enviroment:
                         Convert a local dump of env partition into text format
 Advanced:
   --bulkcmd COMMAND     Run a uboot command on the device
-  --enable_uart_shell   Enable UART shell
+  --bulkcmd_shell       Open a pseudo-shell for sending uboot commands
+  --enable_uart_shell   Enable Linux UART shell
 
 """)
 
@@ -126,8 +127,9 @@ Advanced:
     argument_parser.add_argument('--burn_mode', action='store_true', help='enter USB Burn Mode (if currently in USB Mode)')
     argument_parser.add_argument('--continue_boot', action='store_true', help='continue booting normally (if currently in USB Burn Mode)')
     argument_parser.add_argument('--bulkcmd', action='store', type=str, nargs=1, metavar=('COMMAND'), help='run a uboot command on the device')
+    argument_parser.add_argument('--bulkcmd_shell', action='store_true', help='Open a pseudo-shell for sending uboot commands')
     argument_parser.add_argument('--boot_adb_kernel', action='store', type=str, nargs=1, metavar=('BOOT_SLOT'), help='boot a kernel with adb enabled on chosen slot (A or B)(not persistent)')
-    argument_parser.add_argument('--enable_uart_shell', action='store_true', help='enable UART shell')
+    argument_parser.add_argument('--enable_uart_shell', action='store_true', help='Enable Linux UART shell')
     argument_parser.add_argument('--disable_avb2', action='store', type=str, nargs=1, metavar=('BOOT_SLOT'), help='disable A/B booting, lock to chosen slot(A or B)')
     argument_parser.add_argument('--enable_burn_mode', action='store_true', help='enable USB Burn Mode at every boot (when connected to USB host)')
     argument_parser.add_argument('--enable_burn_mode_button', action='store_true', help='enable USB Burn Mode if preset button 4 is held while booting (when connected to USB host)')
@@ -194,6 +196,17 @@ Advanced:
         if dev is not None:
             BULKCMD_STRING = args.bulkcmd[0]
             dev.bulkcmd(BULKCMD_STRING)
+    elif args.bulkcmd_shell:
+        dev = enter_burn_mode(dev)
+        if dev is not None:
+            print("Entering shell. Use Ctrl+C to exit\nIf valid commands fail, u-boot may be in a bad state.\nJust a note, bulkcmd is unable to display the output of commands.\nRefer to 'uboot-command-reference.md' to get a list of commands.")
+            while True:
+                try:
+                    BULKCMD_STRING = input("bulkcmd: ")
+                    dev.bulkcmd(BULKCMD_STRING, is_shell=True)
+                except KeyboardInterrupt:
+                    print("Exiting...")
+                    quit()
     elif args.boot_adb_kernel:
         dev = enter_burn_mode(dev)
         if dev is not None:

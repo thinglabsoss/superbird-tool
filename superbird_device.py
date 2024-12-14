@@ -215,9 +215,9 @@ class SuperbirdDevice:
         print(message)
         sys.stdout.flush()
 
-    def bulkcmd(self, command:str, ignore_timeout=False, silent=False):
+    def bulkcmd(self, command:str, ignore_timeout=False, silent=False, is_shell = False):
         """ perform a bulkcmd, separated by semicolon """
-        if not silent:
+        if not (is_shell or silent):
             self.print(f' executing bulkcmd: "{command}"')
         try:
             resp = self.device.bulkCmd(command)
@@ -225,8 +225,9 @@ class SuperbirdDevice:
             if not silent:
                 self.print(f'  result: {response}')
             if 'success' not in response:
-                self.print(f'Bulkcmd failed: {command} -> {response}')
-                raise BulkcmdException('Bulkcmd failed')
+                if not is_shell:
+                    self.print(f'Bulkcmd failed: {command} -> {response}')
+                    raise BulkcmdException('Bulkcmd failed')
             time.sleep(0.2)
         except (USBTimeoutError, BulkcmdException) as ex:
             # if you use booti or mw.b, it wont return, thus will raise USBTimeoutError

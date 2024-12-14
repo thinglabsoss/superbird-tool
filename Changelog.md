@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.0
+* Added `--bulkcmd_shell`
+
 ## 0.1.9
 * Now runs `amlmmc env` before trying to read env
 
