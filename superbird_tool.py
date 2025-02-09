@@ -163,8 +163,7 @@ Advanced:
 
     if platform.system() == 'Linux':
         if os.geteuid() != 0:
-            print('Need to run as root!')
-            sys.exit(1)
+            print('NOTE: Not running as root. If you get "Access Denied" errors, run as root or add to your udev rules.')
 
     # First check options that do not need the device
     if args.help:

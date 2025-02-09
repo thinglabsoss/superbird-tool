@@ -16,13 +16,7 @@ A [Changelog can be found here](Changelog.md)
 ### Want an easier way to flash your Car Thing? Try [https://terbium.app](https://terbium.app)!
 
 ## Warranty and Liability
-
-None. You definitely can mess up your device in ways that are difficult to recover. I cannot promise a bug in this script will not brick your device.
-By using this tool, you accept responsibility for the outcome. 
-
-I highly recommend connecting to the UART console, [frederic's repo](https://github.com/frederic/superbird-bulkcmd) has some good pictures showing where the pads are.
-
-Make backups.
+This tool is provided without any warranty or guarantee of performance. While there have been no reported instances of this tool permanently damaging a Car Thing, such a risk exists.  By using this tool, you acknowledge this risk and assume full responsibility for any potential issues that may arise.
 
 ## One Big Caveat
 This tool tries to replace the proprietary `update` binary from Amlogic, and it covers enough functionality to be useful for superbird.
@@ -47,7 +41,7 @@ The only requirements to run this are:
 2. libusb
 3. pyamlboot from [github master branch](https://github.com/superna9999/pyamlboot)
 
-You need to install pyamlboot from [github master branch](https://github.com/superna9999/pyamlboot) because the current pypy package is too old,
+You need to install pyamlboot from the [master branch](https://github.com/superna9999/pyamlboot) on GitHub because the current pypy package is too old,
 and is missing `bulkcmd` functionality.
 
 ### macOS
@@ -59,21 +53,27 @@ Tested with python `3.13.0`, installed via [pyenv](https://github.com/pyenv/pyen
 
 ```bash
 brew install libusb
-python3 -m pip install git+https://github.com/pyusb/pyusb
+python3 -m venv .venv 
+source ./venv/bin/activate
+python3 -m pip install git+https://github.com/pyusb/pyusb # Only needed on MacOS w/ Apple Silicon
 python3 -m pip install git+https://github.com/superna9999/pyamlboot
 python3 superbird_tool.py --find_device
 ```
 
-`root` is not needed on macOS
-
 ### Linux
 Tested on `aarch64` and `x86_64`
 
-On Linux, you just need to install pyamlboot.
-However, `root` is needed on Linux, unless you fiddle with udev rules, which means the pip package also needs to be installed as `root`
+On Linux, you need to install pyamlboot and you might need to add a udev rule.
 ```bash
-sudo python3 -m pip install git+https://github.com/superna9999/pyamlboot
-sudo ./superbird_tool.py --find_device
+python3 -m venv .venv 
+source ./venv/bin/activate
+python3 -m pip install git+https://github.com/superna9999/pyamlboot
+./superbird_tool.py --find_device
+
+# If you get "Access Denied" errors, run the following commands (alternatively you can run superbird_tool as root)
+sudo su -c 'echo \"SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"1b8e\", ATTRS{idProduct}==\"c003\", GROUP=\"$SUDO_USER\", MODE=\"0666\" > /etc/udev/rules.d/60-superbird.rules'
+sudo udevadm control --reload-rules
+sudo udevadm trigger
 ```
 
 ### Windows
@@ -81,8 +81,10 @@ sudo ./superbird_tool.py --find_device
 Tested on `x86_64`, but it seems really difficult to get this working consistently on Windows. I recommend Linux or macOS.
 
 On Windows, setup is a little more involved. First download and install [python for windows](https://www.python.org/downloads/windows/) (tested with 3.10 and 3.11).
-Next you need to install a couple extra packages:
+Next you need to setup a virtual enviroment and install pyamlboot:
 ```bash
+python3 -m venv .venv 
+.venv/Scripts/activate
 python -m pip install pyusb git+https://github.com/superna9999/pyamlboot
 ```
 
@@ -169,9 +171,8 @@ G12A:BL:0253b8:61aa2d;FEAT:F0F821B0:12020;POC:D;RCY:0;USB:0;
 
 In this mode, the device shows up on USB as: `1b8e:c003 Amlogic, Inc. GX-CHIP`
 
-### USB Burn Mode
-This is a special uboot image, which we can interact with via usb.
-
+### Burn Mode
+Amlogic devices have an `update` command in U-Boot which allows you to talk to the bootloader.
 The UART console output will typicaly end with:
 ```
 U-Boot 2015.01 (Jan 21 2022 - 08:55:34 - v1.0-57-gec3ec936c2)
@@ -192,20 +193,19 @@ In this mode, the device shows up on USB as: `1b8e:c003 Amlogic, Inc.`
 ### Normal Bootup
 If USB Burn mode is not enabled at every boot, or if you use `--continue_boot`, the device will boot up normally and launch the Spotify app.
 
-In this mode, the device does not show up on USB.
+In this mode, the device does not show up on USB (unless custom firmware has already been flashed).
 
-### Normal Bootup with USB Gadget
-If you use `--boot_adb_kernel`, a modified kernel and image will be uploaded to the device (non-persistent), which enables USB Gadget.
+### RAM Bootup with USB Gadget
+If you use `--boot_adb_kernel`, a modified kernel and image will be written to RAM (non-persistent) and executed, which temporarily enables USB Gadget.
 
-The USB Gadget can be configured to provide `adb` (like an Android phone), among other possible functionality including `rndis` for usb networking.
+The USB Gadget is configured to provide `adb` (like an Android phone), among other possible functionality including `rndis` for usb networking.
 
 In this mode, the device shows up on USB as: `18d1:4e40 Google Inc. Nexus 7 (fastboot)`
 
-Please do NOT try to use fastboot with superbird device, there is potential to brick it.
-
 ## Persistent USB Gadget with USB Networking
+If you just want to enable ADB and USB Networking, we recommend flashing the Thing Labs firmware from [here.](https://thingify.tools/firmware/P3QZbZIDWnp5m_azQFQqP)
 
-We have provided a script to set up ADB and USB Networking. You can find it, along with documentation in the [scripts/usb-gadget](scripts/usb-gadget) folder.
+If you want to add ADB and USB Networking to an image from scratch, we have provided a script that will push all of the needed files over ADB. You can find it, along with documentation in the [scripts/usb-gadget](scripts/usb-gadget) folder.
 
 This is a heavily modified version of what [frederic provided](https://github.com/frederic/superbird-bulkcmd/blob/main/scripts/enable-adb.sh.client)
 
@@ -238,31 +238,19 @@ cd scripts/usb-gadget
 
 # unplug and replug without holding any buttons
 #   it should boot normally (app should launch), now with adb and usbnet enabled
-
+adb devices # you should see your Car Things serial number
 ip addr  # you should see usb0 listed
 ```
 
 ## Known Issues
-* Sometimes flashing can fail mid flash, especially while flashing bigger partitions like `system`. If this happens, try opening `superbird_device.py` in a text editor, go to line 161, and change the `MULTIPlLIER` parameter from `8` to `4`. If problems persist, change it to `1`. This will be a command flag in the future.
+* Sometimes flashing can fail mid flash, especially while flashing bigger partitions like `system`. If this happens, try running the command again but with `--slow_burn` before the `--restore-` flag. If you're still having issues, try `--slower_burn` instead. 
 * Multiple people have reported issues with trying to use superbird-tool on AMD systems, specifically 5000 series systems. Sometimes a BIOS update can fix this issue but you may just need to use another computer.
 * The option `--enable_uart_shell` is really only meant to be run on a fresh device. It will rewrite `initargs` env var, removing any other changes you made like using a particular system partition every boot.
-* The option `--disable_avb2` will ALSO enable the uart shell; consider using that instead.
+  * The option `--disable_avb2` will ALSO enable the uart shell; consider using that instead.
 * If you boot from USB mode into burn mode (using `--burn_mode`), `--boot_adb_kernel` won't work. This is due to u-boot not setting up some parts of the hardware.
 * In some cases you might get a Timeout Error. This happens sometimes if a previous command failed, and you just need to power cycle the device (actually unplug and plug it back in), and try again. 
-  * ALSO, avoid connecting the device through a USB hub. In my testing, I had many more timeout issues when using a hub.
-  * You might need to power cycle and try again multiple times
+  * If you keep having timeout issues, try different USB cables and/or USB ports, including ports on USB hubs. The Car Thing has a slight hardware flaw that makes it very picky about what USB cables and ports actually work.
 
-## Making Standalone Binaries
-
-I have provided a (very barebones) script to generate a standalone `superbird_tool` binary using `nuitka`.
-
-You need to install `nuitka`, `zstandard` and `ordered-set` packages from pip to use it.
-
-On Linux, you also need to install `patchelf` from your system package manager. ex: `sudo apt-get install -y patchelf`
-
-I have not tested this much yet, just a neat idea for now.
-
-Compilied binaries include `images/` so they should work fine standalone.
 
 # Disclaimer
 "Spotify", "Car Thing" and the Spotify logo are registered trademarks or trademarks of Spotify AB. Thing Labs is not affiliated with, endorsed by, or sponsored by Spotify AB. All other trademarks, service marks, and trade names are the property of their respective owners.
