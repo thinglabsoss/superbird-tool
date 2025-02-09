@@ -18,7 +18,11 @@ A [Changelog can be found here](Changelog.md)
 ## Warranty and Liability
 This tool is provided without any warranty or guarantee of performance. While there have been no reported instances of this tool permanently damaging a Car Thing, such a risk exists.  By using this tool, you acknowledge this risk and assume full responsibility for any potential issues that may arise.
 
-## One Big Caveat
+## Note about slow flashing/dumping speed
+[dustinlieu](https://github.com/dustinlieu) has reimplemented the commands/protocol that the original `update` binary from Amlogic uses to read/write directly to the flash chip. You can find their code [here.](https://github.com/dustinlieu/car-thing-bootloader-tool)
+
+### Original note:
+
 This tool tries to replace the proprietary `update` binary from Amlogic, and it covers enough functionality to be useful for superbird.
 However, dumping partitions is MUCH slower.
 
